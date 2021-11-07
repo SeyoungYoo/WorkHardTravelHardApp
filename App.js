@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TouchableHighlight, TouchableWithoutFeedback, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TouchableHighlight, TouchableWithoutFeedback, TextInput, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
+import { Fontisto } from '@expo/vector-icons'; 
+
 
 const STORAGE_KEY = "@toDos";
 
@@ -19,11 +21,11 @@ export default function App() {
   const onChangeText = (payload) => setText(payload);
   const saveToDos = async (toSave) => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
-  }
+  };
   const loadToDos = async () => {
     const s = await AsyncStorage.getItem(STORAGE_KEY);
     setToDos(JSON.parse(s));
-  }
+  };
 
   const addToDo = async () => {
     if (text === "") {
@@ -37,7 +39,22 @@ export default function App() {
     setToDos(newToDos);
     await saveToDos(newToDos);
     setText("");
-  }
+  };
+  const deleteToDo = async (key) => {
+    Alert.alert(
+      "Delete To Do?", 
+      "Are you sure?", [
+        { text: "Cancel" }, 
+        { text: "I'm Sure", 
+          onPress: () => {
+            const newToDos = {...toDos};
+            delete newToDos[key];
+            setToDos(newToDos);
+            saveToDos(newToDos);
+          },
+        },
+      ])
+  };
 
   return (
     <View style={styles.container}>
@@ -62,6 +79,9 @@ export default function App() {
             toDos[key].working === working ? (
             <View style={styles.toDo} key={key}>
               <Text style={styles.toDoText}>{toDos[key].text}</Text>
+              <TouchableOpacity onPress={() => deleteToDo(key)}>
+                <Fontisto name="trash" size={15} color={theme.gray} />
+              </TouchableOpacity>
             </View> ) : null
           )
         }
@@ -94,11 +114,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   toDo: {
-    backgroundColor: theme.gray,
+    backgroundColor: theme.toDoBg,
     marginBottom: 10,
     paddingVertical: 15,
     paddingHorizontal: 15,
     borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   toDoText: {
     color: 'white',
